@@ -112,6 +112,12 @@ const resolveCharacterOrTeam = async (
   if (!name) {
     throw new Error("Character credit missing name");
   }
+  const publisherData = data?.publisher;
+  const resolvedPublisher =
+    publisherData?.id && publisherData?.name
+      ? await resolvePublisher(fastify, userId, publisherData)
+      : null;
+  const publisherId = resolvedPublisher?.id;
   const comicVineId = data.id ? Number(data.id) : null;
   const existingById = comicVineId
     ? await fastify.prisma.characterOrTeam.findUnique({
@@ -124,6 +130,7 @@ const resolveCharacterOrTeam = async (
       data: {
         name: name || existingById.name,
         aliases: data.aliases ? normalizeAliases(data.aliases) : toAliasInput(existingById.aliases),
+        ...(publisherId ? { publisherId } : {}),
         realName: data.real_name ?? existingById.realName,
         continuity: data.universe?.name ?? existingById.continuity,
         majorStatusQuoNotes: data.deck ?? existingById.majorStatusQuoNotes
@@ -140,6 +147,7 @@ const resolveCharacterOrTeam = async (
       data: {
         ...(comicVineId ? { comicVineId } : {}),
         aliases: data.aliases ? normalizeAliases(data.aliases) : toAliasInput(existingByName.aliases),
+        ...(publisherId ? { publisherId } : {}),
         realName: data.real_name ?? existingByName.realName,
         continuity: data.universe?.name ?? existingByName.continuity,
         majorStatusQuoNotes: data.deck ?? existingByName.majorStatusQuoNotes
@@ -156,6 +164,7 @@ const resolveCharacterOrTeam = async (
       data: {
         ...(comicVineId ? { comicVineId } : {}),
         aliases: data.aliases ? normalizeAliases(data.aliases) : toAliasInput(existingByRealName.aliases),
+        ...(publisherId ? { publisherId } : {}),
         realName: data.real_name ?? existingByRealName.realName,
         continuity: data.universe?.name ?? existingByRealName.continuity,
         majorStatusQuoNotes: data.deck ?? existingByRealName.majorStatusQuoNotes
@@ -183,6 +192,7 @@ const resolveCharacterOrTeam = async (
       data: {
         ...(comicVineId ? { comicVineId } : {}),
         aliases: data.aliases ? normalizeAliases(data.aliases) : toAliasInput(aliasMatch.aliases),
+        ...(publisherId ? { publisherId } : {}),
         realName: data.real_name ?? aliasMatch.realName,
         continuity: data.universe?.name ?? aliasMatch.continuity,
         majorStatusQuoNotes: data.deck ?? aliasMatch.majorStatusQuoNotes
@@ -196,6 +206,7 @@ const resolveCharacterOrTeam = async (
       name,
       ...(comicVineId ? { comicVineId } : {}),
       aliases: normalizeAliases(data.aliases),
+      publisherId: publisherId || null,
       realName: data.real_name || null,
       continuity: data.universe?.name || null,
       majorStatusQuoNotes: data.deck || null,
@@ -279,7 +290,12 @@ const importComicVineResource = async (fastify: FastifyInstance, userId: string,
       return resolveSeries(fastify, userId, data, fallbackPublisher.id);
     }
     case "issue": {
+      const publisherData = data.volume?.publisher || data.publisher;
+      const resolvedPublisher = publisherData
+        ? await resolvePublisher(fastify, userId, publisherData)
+        : null;
       const fallbackPublisherId =
+        resolvedPublisher?.id ||
         (await fastify.prisma.publisher.findFirst({ where: { userId } }))?.id ||
         (await fastify.prisma.publisher.create({
           data: { userId, name: "Unknown Publisher" }
