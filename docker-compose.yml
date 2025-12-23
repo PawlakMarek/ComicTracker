@@ -37,6 +37,8 @@ services:
     build:
       context: ./apps/web
     restart: unless-stopped
+    environment:
+      API_UPSTREAM: http://api:3001
     depends_on:
       - api
     ports:

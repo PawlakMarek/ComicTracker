@@ -48,6 +48,7 @@ The API runs on `http://localhost:3001` inside the compose network. Nginx proxie
 - `COOKIE_DOMAIN`: Optional cookie domain for subdomain deployments (e.g. `.example.com`)
 - `COOKIE_SECURE`: Optional override for cookie `secure` flag (`true`/`false`)
 - `VITE_API_URL`: Optional API base for the frontend (leave empty to use `/api`)
+- `API_UPSTREAM`: Nginx upstream for `/api` proxy in the web container (default `http://127.0.0.1:3001`)
 
 ## Migrations
 - Local dev: `npm run prisma:migrate`
@@ -91,6 +92,8 @@ Railway works best with two services from the same GitHub repo:
    - Dockerfile path: `apps/web/Dockerfile`
    - Build arg:
      - `VITE_API_URL=https://<your-api-domain>` (so the SPA calls the API directly)
+   - Env var:
+     - `API_UPSTREAM=https://<your-api-domain>` (required so nginx starts successfully)
 
 ### Self-hosted
 Use `docker compose up --build` and set the same env vars via `.env`.
