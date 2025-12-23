@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: comic
+      POSTGRES_PASSWORD: comic
+      POSTGRES_DB: comictracker
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U comic -d comictracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  api:
+    build:
+      context: ./apps/api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://comic:comic@db:5432/comictracker
+      JWT_SECRET: change_me_in_production_secret
+      COOKIE_SECRET: change_me_in_production_cookie
+      API_PORT: 3001
+      WEB_ORIGIN: http://localhost:3000
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+
+  web:
+    build:
+      context: ./apps/web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
+
+volumes:
+  db_data:

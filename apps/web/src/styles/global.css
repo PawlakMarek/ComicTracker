@@ -1,0 +1,112 @@
+@import url("https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --surface: #fdfaf5;
+  --accent: #f06b3e;
+  --accent-dark: #d6572c;
+  --accent-soft: #f6c9b4;
+  --moss: #2f6d6a;
+  --moss-soft: #cfe0dd;
+}
+
+body {
+  font-family: "IBM Plex Sans", sans-serif;
+  background: radial-gradient(circle at top left, #f5efe6 0%, #f7f5f2 45%, #f9f7f4 100%);
+  color: #151414;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Bodoni Moda", serif;
+  letter-spacing: 0.02em;
+}
+
+.app-shell {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.app-shell::before,
+.app-shell::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(0px);
+  opacity: 0.14;
+  z-index: 0;
+}
+
+.app-shell::before {
+  width: 420px;
+  height: 420px;
+  top: -120px;
+  right: -80px;
+  background: radial-gradient(circle, #f06b3e 0%, transparent 70%);
+  animation: float 10s ease-in-out infinite;
+}
+
+.app-shell::after {
+  width: 520px;
+  height: 520px;
+  bottom: -200px;
+  left: -120px;
+  background: radial-gradient(circle, #2f6d6a 0%, transparent 70%);
+  animation: float 12s ease-in-out infinite;
+}
+
+.surface-panel {
+  background: rgba(253, 250, 245, 0.92);
+  border: 1px solid rgba(214, 204, 191, 0.7);
+  box-shadow: 0 24px 60px -40px rgba(15, 12, 8, 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.stagger > * {
+  animation: fadeUp 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.stagger > *:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.stagger > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.stagger > *:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.stagger > *:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.stagger > *:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+@layer components {
+  .btn-primary {
+    @apply rounded-full bg-ember-500 px-4 py-2 text-sm font-semibold text-white shadow-card transition hover:bg-ember-600;
+  }
+
+  .btn-secondary {
+    @apply rounded-full border border-mist-200 px-4 py-2 text-sm font-semibold text-ink-800 transition hover:border-mist-300 hover:text-ink-900;
+  }
+
+  .chip {
+    @apply rounded-full border border-mist-200 px-3 py-1 text-xs uppercase tracking-wide text-ink-700;
+  }
+
+  .section-title {
+    @apply text-xl font-semibold text-ink-900;
+  }
+}

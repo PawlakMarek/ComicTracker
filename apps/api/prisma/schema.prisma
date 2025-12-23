@@ -1,0 +1,368 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SeriesType {
+  ONGOING
+  LIMITED
+  ONE_SHOT
+  SPECIAL
+  DIGITAL
+}
+
+enum CharacterType {
+  CHARACTER
+  TEAM
+}
+
+enum TrackingPriority {
+  HIGH
+  MEDIUM
+  LOW
+  NONE
+}
+
+enum StoryBlockType {
+  ARC
+  RUN
+  EVENT
+  TIE_IN_GROUP
+  OTHER
+}
+
+enum StoryBlockImportance {
+  CORE
+  SIDE
+  DEEP_CUT
+}
+
+enum SyncLevel {
+  ISOLATED_0
+  LIGHT_OVERLAP_1
+  MAJOR_EVENT_2
+}
+
+enum StoryBlockStatus {
+  NOT_STARTED
+  READING
+  FINISHED
+  SKIPPED
+}
+
+enum IssueStatus {
+  UNREAD
+  READING
+  FINISHED
+  SKIPPED
+}
+
+enum FatigueLevel {
+  LOW
+  MEDIUM
+  HIGH
+  UNKNOWN
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  FAILED
+  COMPLETED
+}
+
+enum JobType {
+  COMICVINE_IMPORT
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  publishers   Publisher[]
+  series       Series[]
+  characters   CharacterOrTeam[]
+  events       Event[]
+  storyBlocks  StoryBlock[]
+  readingOrders ReadingOrder[]
+  issues       Issue[]
+  sessions     ReadingSession[]
+  settings     UserSetting?
+  jobs         Job[]
+}
+
+model Publisher {
+  id        String     @id @default(uuid())
+  userId    String
+  name      String
+  comicVineId Int?
+  country   String?
+  notes     String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  series    Series[]
+  events    Event[]
+  characters CharacterOrTeam[]
+  storyBlocks StoryBlock[]
+
+  @@unique([userId, name])
+  @@unique([userId, comicVineId])
+}
+
+model Series {
+  id        String   @id @default(uuid())
+  userId    String
+  publisherId String
+  name      String
+  comicVineId Int?
+  startYear Int
+  endYear   Int?
+  era       String?
+  chronology String?
+  type      SeriesType
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publisher Publisher @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  issues    Issue[]
+  storyBlockSeries StoryBlockSeries[]
+
+  @@unique([userId, name])
+  @@unique([userId, comicVineId])
+}
+
+model CharacterOrTeam {
+  id                      String   @id @default(uuid())
+  userId                  String
+  publisherId             String?
+  name                    String
+  realName                String?
+  type                    CharacterType
+  comicVineId             Int?
+  aliases                 Json?
+  continuity              String?
+  majorStatusQuoNotes      String?
+  currentTrackingPriority TrackingPriority
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publisher               Publisher? @relation(fields: [publisherId], references: [id])
+  storyBlockCharacters     StoryBlockCharacter[]
+  issueCharacters          IssueCharacter[]
+  characterTeams           CharacterTeam[] @relation("CharacterTeams")
+  teamMembers              CharacterTeam[] @relation("TeamMembers")
+
+  @@unique([userId, name, type])
+  @@unique([userId, comicVineId])
+}
+
+model Event {
+  id            String   @id @default(uuid())
+  userId        String
+  publisherId   String
+  name          String
+  startYear     Int
+  endYear       Int?
+  sequenceOrder Int
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publisher     Publisher @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  storyBlocks   StoryBlock[]
+  issueEvents   IssueEvent[]
+
+  @@unique([userId, name])
+}
+
+model StoryBlock {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  type        StoryBlockType
+  era         String?
+  chronology  String?
+  startYear   Int
+  endYear     Int?
+  importance  StoryBlockImportance
+  syncLevel   SyncLevel
+  publisherId String?
+  previousStoryBlockId String?
+  eventId     String?
+  orderIndex  Float
+  status      StoryBlockStatus
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publisher   Publisher? @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  previousStoryBlock StoryBlock? @relation("StoryBlockSequence", fields: [previousStoryBlockId], references: [id])
+  nextStoryBlocks    StoryBlock[] @relation("StoryBlockSequence")
+  event       Event?   @relation(fields: [eventId], references: [id])
+  storyBlockSeries StoryBlockSeries[]
+  storyBlockIssues StoryBlockIssue[]
+  storyBlockCharacters StoryBlockCharacter[]
+  readingOrderItems ReadingOrderItem[]
+
+  @@unique([userId, name])
+}
+
+model ReadingOrder {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       ReadingOrderItem[]
+
+  @@unique([userId, name])
+}
+
+model ReadingOrderItem {
+  id             String   @id @default(uuid())
+  readingOrderId String
+  storyBlockId   String
+  orderIndex     Float
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  readingOrder   ReadingOrder @relation(fields: [readingOrderId], references: [id], onDelete: Cascade)
+  storyBlock     StoryBlock @relation(fields: [storyBlockId], references: [id], onDelete: Cascade)
+
+  @@unique([readingOrderId, storyBlockId])
+  @@index([readingOrderId, orderIndex])
+}
+
+model Issue {
+  id                String   @id @default(uuid())
+  userId            String
+  seriesId          String
+  issueNumber       String
+  issueNumberSort   Float?
+  title             String?
+  comicVineId       Int?
+  releaseDate       DateTime?
+  readingOrderIndex Int?
+  status            IssueStatus
+  readDate          DateTime?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  series            Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  storyBlockIssues  StoryBlockIssue[]
+  issueCharacters   IssueCharacter[]
+  issueEvents       IssueEvent[]
+  readingSessionIssues ReadingSessionIssue[]
+
+  @@unique([userId, seriesId, issueNumber])
+  @@unique([userId, comicVineId])
+}
+
+model ReadingSession {
+  id              String   @id @default(uuid())
+  userId          String
+  sessionDate     DateTime
+  durationMinutes Int
+  fatigueLevel    FatigueLevel
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readingSessionIssues ReadingSessionIssue[]
+}
+
+model UserSetting {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  comicVineApiKey String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Job {
+  id        String    @id @default(uuid())
+  userId    String
+  type      JobType
+  status    JobStatus
+  payload   Json
+  result    Json?
+  error     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StoryBlockSeries {
+  storyBlockId String
+  seriesId     String
+  storyBlock   StoryBlock @relation(fields: [storyBlockId], references: [id], onDelete: Cascade)
+  series       Series     @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@id([storyBlockId, seriesId])
+}
+
+model StoryBlockIssue {
+  storyBlockId String
+  issueId      String
+  storyBlock   StoryBlock @relation(fields: [storyBlockId], references: [id], onDelete: Cascade)
+  issue        Issue      @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@id([storyBlockId, issueId])
+}
+
+model StoryBlockCharacter {
+  storyBlockId      String
+  characterOrTeamId String
+  storyBlock        StoryBlock     @relation(fields: [storyBlockId], references: [id], onDelete: Cascade)
+  characterOrTeam   CharacterOrTeam @relation(fields: [characterOrTeamId], references: [id], onDelete: Cascade)
+
+  @@id([storyBlockId, characterOrTeamId])
+}
+
+model IssueCharacter {
+  issueId           String
+  characterOrTeamId String
+  issue             Issue           @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  characterOrTeam   CharacterOrTeam @relation(fields: [characterOrTeamId], references: [id], onDelete: Cascade)
+
+  @@id([issueId, characterOrTeamId])
+}
+
+model CharacterTeam {
+  characterId String @db.Uuid
+  teamId      String @db.Uuid
+  character   CharacterOrTeam @relation("CharacterTeams", fields: [characterId], references: [id], onDelete: Cascade)
+  team        CharacterOrTeam @relation("TeamMembers", fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@id([characterId, teamId])
+}
+
+model IssueEvent {
+  issueId String
+  eventId String
+  issue   Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([issueId, eventId])
+}
+
+model ReadingSessionIssue {
+  readingSessionId String
+  issueId          String
+  readingSession   ReadingSession @relation(fields: [readingSessionId], references: [id], onDelete: Cascade)
+  issue            Issue          @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@id([readingSessionId, issueId])
+}

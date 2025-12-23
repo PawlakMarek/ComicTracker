@@ -1,0 +1,9 @@
+export const SeriesTypeValues = ["ONGOING", "LIMITED", "ONE_SHOT", "SPECIAL", "DIGITAL"] as const;
+export const CharacterTypeValues = ["CHARACTER", "TEAM"] as const;
+export const TrackingPriorityValues = ["HIGH", "MEDIUM", "LOW", "NONE"] as const;
+export const StoryBlockTypeValues = ["ARC", "RUN", "EVENT", "TIE_IN_GROUP", "OTHER"] as const;
+export const StoryBlockImportanceValues = ["CORE", "SIDE", "DEEP_CUT"] as const;
+export const SyncLevelValues = ["ISOLATED_0", "LIGHT_OVERLAP_1", "MAJOR_EVENT_2"] as const;
+export const StoryBlockStatusValues = ["NOT_STARTED", "READING", "FINISHED", "SKIPPED"] as const;
+export const IssueStatusValues = ["UNREAD", "READING", "FINISHED", "SKIPPED"] as const;
+export const FatigueLevelValues = ["LOW", "MEDIUM", "HIGH", "UNKNOWN"] as const;
