@@ -124,8 +124,7 @@ model Series {
   comicVineId Int?
   startYear Int
   endYear   Int?
-  era       String?
-  chronology String?
+  era       String[] @default([])
   type      SeriesType
   notes     String?
   createdAt DateTime @default(now())

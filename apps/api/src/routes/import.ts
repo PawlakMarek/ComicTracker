@@ -254,8 +254,7 @@ export default async function importRoutes(fastify: FastifyInstance) {
               publisherId: publisher.id,
               startYear: Number(row.startYear),
               endYear: parseNumber(row.endYear),
-              era: row.era ?? null,
-              chronology: row.chronology ?? null,
+              era: parseList(row.era),
               type: row.type,
               notes: row.notes ?? null
             },
@@ -265,8 +264,7 @@ export default async function importRoutes(fastify: FastifyInstance) {
               name: row.name,
               startYear: Number(row.startYear),
               endYear: parseNumber(row.endYear),
-              era: row.era ?? null,
-              chronology: row.chronology ?? null,
+              era: parseList(row.era),
               type: row.type,
               notes: row.notes ?? null
             }

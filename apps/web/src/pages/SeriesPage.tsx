@@ -3,6 +3,7 @@ import Papa from "papaparse";
 import { Link } from "react-router-dom";
 import SectionHeader from "../components/SectionHeader";
 import FormField from "../components/FormField";
+import SearchableMultiSelect from "../components/SearchableMultiSelect";
 import { apiFetch } from "../lib/api";
 import { seriesTypes } from "../lib/enums";
 
@@ -15,8 +16,7 @@ const SeriesPage = () => {
     publisherId: "",
     startYear: "",
     endYear: "",
-    era: "",
-    chronology: "",
+    era: [] as string[],
     type: ""
   });
   const [notes, setNotes] = React.useState("");
@@ -32,7 +32,16 @@ const SeriesPage = () => {
 
   const collectSuggestions = React.useCallback((entries: any[], field: string) => {
     const values = entries
-      .map((entry) => (typeof entry?.[field] === "string" ? entry[field].trim() : ""))
+      .flatMap((entry) => {
+        const value = entry?.[field];
+        if (Array.isArray(value)) {
+          return value.map((item) => String(item).trim()).filter(Boolean);
+        }
+        if (typeof value === "string") {
+          return [value.trim()].filter(Boolean);
+        }
+        return [];
+      })
       .filter(Boolean);
     return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b));
   }, []);
@@ -41,9 +50,9 @@ const SeriesPage = () => {
     () => collectSuggestions([...items, ...storyBlocks], "era"),
     [collectSuggestions, items, storyBlocks]
   );
-  const chronologySuggestions = React.useMemo(
-    () => collectSuggestions([...items, ...storyBlocks], "chronology"),
-    [collectSuggestions, items, storyBlocks]
+  const eraOptions = React.useMemo(
+    () => eraSuggestions.map((value) => ({ label: value, value })),
+    [eraSuggestions]
   );
 
   const load = React.useCallback(() => {
@@ -104,11 +113,11 @@ const SeriesPage = () => {
           ...form,
           startYear: Number(form.startYear),
           endYear: form.endYear ? Number(form.endYear) : null,
-          chronology: form.chronology || null,
+          era: form.era,
           notes: notes || null
         })
       });
-      setForm({ name: "", publisherId: "", startYear: "", endYear: "", era: "", chronology: "", type: "" });
+      setForm({ name: "", publisherId: "", startYear: "", endYear: "", era: [], type: "" });
       setNotes("");
       load();
     } catch (err) {
@@ -136,7 +145,6 @@ const SeriesPage = () => {
       startYear: row.startYear?.trim(),
       endYear: row.endYear?.trim(),
       era: row.era?.trim(),
-      chronology: row.chronology?.trim(),
       type: row.type?.trim(),
       notes: row.notes?.trim()
     }));
@@ -184,19 +192,14 @@ const SeriesPage = () => {
             value={form.endYear}
             onChange={(value) => setForm({ ...form, endYear: value })}
           />
-          <FormField
+          <SearchableMultiSelect
             label="Era"
-            value={form.era}
-            onChange={(value) => setForm({ ...form, era: value })}
-            suggestions={eraSuggestions}
-            listId="series-era-options"
-          />
-          <FormField
-            label="Chronology"
-            value={form.chronology}
-            onChange={(value) => setForm({ ...form, chronology: value })}
-            suggestions={chronologySuggestions}
-            listId="series-chronology-options"
+            options={eraOptions}
+            selectedValues={form.era}
+            onChange={(values) => setForm({ ...form, era: values })}
+            placeholder="Search or add eras"
+            helper="Add multiple eras if the series spans more than one publication period."
+            allowCustom
           />
         </div>
         <div className="mt-4">
@@ -236,16 +239,7 @@ const SeriesPage = () => {
                   </button>
                 </th>
                 <th className="pb-2">Publisher</th>
-                <th className="pb-2">
-                  <button className="text-left" onClick={() => handleSort("era")}>
-                    Era
-                  </button>
-                </th>
-                <th className="pb-2">
-                  <button className="text-left" onClick={() => handleSort("chronology")}>
-                    Chronology
-                  </button>
-                </th>
+                <th className="pb-2">Eras</th>
                 <th className="pb-2">
                   <button className="text-left" onClick={() => handleSort("type")}>
                     Type
@@ -266,8 +260,9 @@ const SeriesPage = () => {
                     <Link to={`/library/series/${item.id}`}>{item.name}</Link>
                   </td>
                   <td className="py-3">{item.publisher?.name}</td>
-                  <td className="py-3">{item.era || "N/A"}</td>
-                  <td className="py-3">{item.chronology || "N/A"}</td>
+                  <td className="py-3">
+                    {Array.isArray(item.era) && item.era.length ? item.era.join(", ") : "N/A"}
+                  </td>
                   <td className="py-3">{item.type}</td>
                   <td className="py-3">{item.startYear}</td>
                   <td className="py-3">
@@ -316,13 +311,13 @@ const SeriesPage = () => {
       <div className="rounded-3xl border border-mist-200 bg-white/80 p-6 shadow-card">
         <h3 className="text-lg font-semibold text-ink-900">Bulk Add Series</h3>
         <p className="mt-2 text-sm text-ink-700">
-          Paste CSV with headers: <code>name,publisherName,startYear,endYear,era,chronology,type,notes</code>
+          Paste CSV with headers: <code>name,publisherName,startYear,endYear,era,type,notes</code>
         </p>
         <textarea
           className="mt-4 min-h-[180px] w-full rounded-2xl border border-mist-200 bg-white px-3 py-2 text-sm text-ink-900"
           value={bulkText}
           onChange={(event) => setBulkText(event.target.value)}
-          placeholder="name,publisherName,startYear,endYear,era,chronology,type,notes\nThor (2018),Marvel,2018,,Fresh Start,2018,ONGOING,\nAvengers (2018),Marvel,2018,,Fresh Start,2018,ONGOING,"
+          placeholder="name,publisherName,startYear,endYear,era,type,notes\nThor (2018),Marvel,2018,,Fresh Start|Marvel NOW,ONGOING,\nAvengers (2018),Marvel,2018,,Fresh Start,ONGOING,"
         />
         {bulkStatus ? <p className="mt-3 text-sm text-ember-600">{bulkStatus}</p> : null}
         <button className="btn-primary mt-4" onClick={handleBulkImport}>

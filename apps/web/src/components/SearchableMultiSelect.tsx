@@ -10,6 +10,7 @@ type Props = {
   placeholder?: string;
   helper?: string;
   maxResults?: number;
+  allowCustom?: boolean;
 };
 
 const SearchableMultiSelect = ({
@@ -19,10 +20,12 @@ const SearchableMultiSelect = ({
   onChange,
   placeholder,
   helper,
-  maxResults = 8
+  maxResults = 8,
+  allowCustom = false
 }: Props) => {
   const [query, setQuery] = React.useState("");
   const selectedSet = React.useMemo(() => new Set(selectedValues), [selectedValues]);
+  const trimmedQuery = query.trim();
 
   const filtered = React.useMemo(() => {
     if (!query.trim()) return [];
@@ -32,6 +35,17 @@ const SearchableMultiSelect = ({
       .filter((option) => option.label.toLowerCase().includes(lower))
       .slice(0, maxResults);
   }, [maxResults, options, query, selectedSet]);
+
+  const exactOption = React.useMemo(() => {
+    if (!trimmedQuery) return null;
+    const lower = trimmedQuery.toLowerCase();
+    return options.find(
+      (option) => option.value.toLowerCase() === lower || option.label.toLowerCase() === lower
+    );
+  }, [options, trimmedQuery]);
+
+  const showCustomAdd =
+    allowCustom && trimmedQuery && !selectedSet.has(trimmedQuery) && !exactOption;
 
   const handleAdd = (value: string) => {
     if (selectedSet.has(value)) return;
@@ -52,9 +66,25 @@ const SearchableMultiSelect = ({
         value={query}
         placeholder={placeholder || "Search to add..."}
         onChange={(event) => setQuery(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && showCustomAdd) {
+            event.preventDefault();
+            handleAdd(trimmedQuery);
+          }
+        }}
       />
-      {filtered.length ? (
+      {showCustomAdd || filtered.length ? (
         <div className="rounded-2xl border border-mist-200 bg-white shadow-card">
+          {showCustomAdd ? (
+            <button
+              type="button"
+              className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-ink-900 hover:bg-mist-100"
+              onClick={() => handleAdd(trimmedQuery)}
+            >
+              <span>{trimmedQuery}</span>
+              <span className="text-xs text-ink-500">Add new</span>
+            </button>
+          ) : null}
           {filtered.map((option) => (
             <button
               type="button"

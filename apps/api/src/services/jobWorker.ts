@@ -229,7 +229,7 @@ const resolveSeries = async (
   };
   if (data.start_year) updateData.startYear = Number(data.start_year);
   if (data.end_year) updateData.endYear = Number(data.end_year);
-  if (data.location_credits?.[0]?.name) updateData.era = data.location_credits[0].name;
+  if (data.location_credits?.[0]?.name) updateData.era = [data.location_credits[0].name];
   if (data.deck) updateData.notes = data.deck;
 
   const existingById = await fastify.prisma.series.findUnique({
@@ -263,8 +263,7 @@ const resolveSeries = async (
       publisherId: fallbackPublisherId,
       startYear: data.start_year ? Number(data.start_year) : 2000,
       endYear: data.end_year ? Number(data.end_year) : null,
-      era: data.location_credits?.[0]?.name || null,
-      chronology: null,
+      era: data.location_credits?.[0]?.name ? [data.location_credits[0].name] : [],
       type: "ONGOING",
       notes: data.deck || null
     }

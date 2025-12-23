@@ -3,17 +3,25 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { getPagination } from "../utils/pagination";
 import { SeriesTypeValues } from "../utils/enums";
+import { parseList } from "../utils/parse";
 
 const seriesSchema = z.object({
   name: z.string().min(1),
   publisherId: z.string().min(1),
   startYear: z.number().int().min(1900).max(2100),
   endYear: z.number().int().min(1900).max(2100).nullable().optional(),
-  era: z.string().nullable().optional(),
-  chronology: z.string().nullable().optional(),
+  era: z.union([z.string(), z.array(z.string())]).nullable().optional(),
   type: z.enum(SeriesTypeValues),
   notes: z.string().nullable().optional()
 });
+
+const normalizeEra = (value: string | string[] | null | undefined) => {
+  if (!value) return [] as string[];
+  if (Array.isArray(value)) {
+    return Array.from(new Set(value.map((entry) => String(entry).trim()).filter(Boolean)));
+  }
+  return Array.from(new Set(parseList(value)));
+};
 
 export default async function seriesRoutes(fastify: FastifyInstance) {
   fastify.get("/", { preHandler: fastify.requireAuth }, async (request, reply) => {
@@ -29,10 +37,11 @@ export default async function seriesRoutes(fastify: FastifyInstance) {
     const { page, pageSize, skip, take } = getPagination(request.query as Record<string, any>);
     const userId = request.user!.id;
 
+    const eraList = parseList(era);
     const where: Record<string, any> = {
       userId,
       ...(publisherId ? { publisherId } : {}),
-      ...(era ? { era } : {}),
+      ...(eraList.length ? { era: { hasSome: eraList } } : {}),
       ...(type ? { type } : {}),
       ...(q
         ? {
@@ -44,7 +53,7 @@ export default async function seriesRoutes(fastify: FastifyInstance) {
         : {})
     };
 
-    const sortFields = ["name", "startYear", "endYear", "era", "chronology", "type", "createdAt"] as const;
+    const sortFields = ["name", "startYear", "endYear", "type", "createdAt"] as const;
     const sortField = sortFields.includes(sort as (typeof sortFields)[number])
       ? (sort as (typeof sortFields)[number])
       : "name";
@@ -74,8 +83,7 @@ export default async function seriesRoutes(fastify: FastifyInstance) {
         publisherName?: string;
         startYear?: number | string;
         endYear?: number | string | null;
-        era?: string | null;
-        chronology?: string | null;
+        era?: string | string[] | null;
         type?: string;
         notes?: string | null;
       }>;
@@ -151,8 +159,7 @@ export default async function seriesRoutes(fastify: FastifyInstance) {
         publisherId,
         startYear,
         endYear,
-        era: item.era ?? null,
-        chronology: item.chronology ?? null,
+        era: normalizeEra(item.era),
         type,
         notes: item.notes ?? null
       });
@@ -182,8 +189,7 @@ export default async function seriesRoutes(fastify: FastifyInstance) {
         publisherId: body.publisherId,
         startYear: body.startYear,
         endYear: body.endYear ?? null,
-        era: body.era ?? null,
-        chronology: body.chronology ?? null,
+        era: normalizeEra(body.era),
         type: body.type,
         notes: body.notes ?? null
       }
@@ -252,8 +258,7 @@ export default async function seriesRoutes(fastify: FastifyInstance) {
         publisherId: body.publisherId,
         startYear: body.startYear,
         endYear: body.endYear ?? null,
-        era: body.era ?? null,
-        chronology: body.chronology ?? null,
+        era: normalizeEra(body.era),
         type: body.type,
         notes: body.notes ?? null
       }

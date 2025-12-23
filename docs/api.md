@@ -27,7 +27,7 @@ Each supports `GET /`, `POST /`, `GET /:id`, `PUT /:id`, `DELETE /:id`.
 - `POST /api/issues/bulk` with `{ items: [] }`
 
 ### List Filtering
-- `/api/series`: `publisherId`, `era`, `type`, `q`
+- `/api/series`: `publisherId`, `era` (matches any era value), `type`, `q`
 - `/api/characters`: `publisherId`, `type`, `priority`, `q`, `sort`, `order`
 - `/api/events`: `publisherId`, `q`
 - `/api/story-blocks`: `status`, `era`, `importance`, `syncLevel`, `publisherId`, `q`

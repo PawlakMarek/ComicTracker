@@ -13,8 +13,10 @@ Each import expects a CSV or JSON array. Use the Import UI to map column names t
 Fields: `name`, `country`, `notes`
 
 ## Series
-Fields: `name`, `publisher`, `startYear`, `endYear`, `era`, `chronology`, `type`, `notes`
-Bulk CSV headers (paste): `name`, `publisherName`, `startYear`, `endYear`, `era`, `chronology`, `type`, `notes`
+Fields: `name`, `publisher`, `startYear`, `endYear`, `era`, `type`, `notes`
+- `era`: comma/semicolon/pipe separated list (stored as an array)
+- `chronology`: supported only for Story Blocks (not Series)
+Bulk CSV headers (paste): `name`, `publisherName`, `startYear`, `endYear`, `era`, `type`, `notes`
 
 ## Characters / Teams
 Fields: `name`, `realName`, `type`, `publisher`, `aliases`, `continuity`, `majorStatusQuoNotes`, `currentTrackingPriority`, `teams`
@@ -29,6 +31,7 @@ Fields: `name`, `publisher`, `startYear`, `endYear`, `sequenceOrder`, `notes`
 
 ## Story Blocks
 Fields: `name`, `type`, `era`, `chronology`, `publisher`, `startYear`, `endYear`, `importance`, `syncLevel`, `event`, `orderIndex`, `status`, `notes`, `series`, `issues`, `characters`, `teams`
+- `era`: single value (story blocks support one era at a time)
 - `series`: comma-separated list of series names
 - `issues`: comma-separated list of `Series Name#IssueNumber`
 - `characters` / `teams`: comma-separated names (created if missing)

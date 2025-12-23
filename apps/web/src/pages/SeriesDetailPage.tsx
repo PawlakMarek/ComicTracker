@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import SectionHeader from "../components/SectionHeader";
 import FormField from "../components/FormField";
+import SearchableMultiSelect from "../components/SearchableMultiSelect";
 import { apiFetch } from "../lib/api";
 import { seriesTypes } from "../lib/enums";
 
@@ -19,15 +20,23 @@ const SeriesDetailPage = () => {
     publisherId: "",
     startYear: "",
     endYear: "",
-    era: "",
-    chronology: "",
+    era: [] as string[],
     type: "",
     notes: ""
   });
 
   const collectSuggestions = React.useCallback((entries: any[], field: string) => {
     const values = entries
-      .map((entry) => (typeof entry?.[field] === "string" ? entry[field].trim() : ""))
+      .flatMap((entry) => {
+        const value = entry?.[field];
+        if (Array.isArray(value)) {
+          return value.map((item) => String(item).trim()).filter(Boolean);
+        }
+        if (typeof value === "string") {
+          return [value.trim()].filter(Boolean);
+        }
+        return [];
+      })
       .filter(Boolean);
     return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b));
   }, []);
@@ -36,9 +45,9 @@ const SeriesDetailPage = () => {
     () => collectSuggestions([...seriesOptions, ...storyBlocks], "era"),
     [collectSuggestions, seriesOptions, storyBlocks]
   );
-  const chronologySuggestions = React.useMemo(
-    () => collectSuggestions([...seriesOptions, ...storyBlocks], "chronology"),
-    [collectSuggestions, seriesOptions, storyBlocks]
+  const eraOptions = React.useMemo(
+    () => eraSuggestions.map((value) => ({ label: value, value })),
+    [eraSuggestions]
   );
 
   React.useEffect(() => {
@@ -52,8 +61,7 @@ const SeriesDetailPage = () => {
         publisherId: data.publisherId,
         startYear: String(data.startYear),
         endYear: data.endYear ? String(data.endYear) : "",
-        era: data.era || "",
-        chronology: data.chronology || "",
+        era: Array.isArray(data.era) ? data.era : data.era ? [data.era] : [],
         type: data.type,
         notes: data.notes || ""
       });
@@ -72,8 +80,7 @@ const SeriesDetailPage = () => {
             publisherId: nextForm.publisherId,
             startYear: Number(nextForm.startYear),
             endYear: nextForm.endYear ? Number(nextForm.endYear) : null,
-            era: nextForm.era || null,
-            chronology: nextForm.chronology || null,
+            era: nextForm.era,
             type: nextForm.type,
             notes: nextForm.notes || null
           })
@@ -182,27 +189,18 @@ const SeriesDetailPage = () => {
             scheduleSave(nextForm);
           }}
         />
-        <FormField
+        <SearchableMultiSelect
           label="Era"
-          value={form.era}
-          onChange={(value) => {
-            const nextForm = { ...form, era: value };
+          options={eraOptions}
+          selectedValues={form.era}
+          onChange={(values) => {
+            const nextForm = { ...form, era: values };
             setForm(nextForm);
             scheduleSave(nextForm);
           }}
-          suggestions={eraSuggestions}
-          listId="series-detail-era-options"
-        />
-        <FormField
-          label="Chronology"
-          value={form.chronology}
-          onChange={(value) => {
-            const nextForm = { ...form, chronology: value };
-            setForm(nextForm);
-            scheduleSave(nextForm);
-          }}
-          suggestions={chronologySuggestions}
-          listId="series-detail-chronology-options"
+          placeholder="Search or add eras"
+          helper="Add multiple eras if the series spans more than one publication period."
+          allowCustom
         />
       </div>
       <div className="mt-4">

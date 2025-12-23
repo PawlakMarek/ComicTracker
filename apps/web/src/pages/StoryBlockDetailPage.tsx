@@ -47,7 +47,16 @@ const StoryBlockDetailPage = () => {
 
   const collectSuggestions = React.useCallback((entries: any[], field: string) => {
     const values = entries
-      .map((entry) => (typeof entry?.[field] === "string" ? entry[field].trim() : ""))
+      .flatMap((entry) => {
+        const value = entry?.[field];
+        if (Array.isArray(value)) {
+          return value.map((item) => String(item).trim()).filter(Boolean);
+        }
+        if (typeof value === "string") {
+          return [value.trim()].filter(Boolean);
+        }
+        return [];
+      })
       .filter(Boolean);
     return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b));
   }, []);

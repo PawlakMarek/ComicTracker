@@ -7,7 +7,7 @@ const entityConfig: Record<string, { label: string; fields: string[] }> = {
   publishers: { label: "Publishers", fields: ["name", "country", "notes"] },
   series: {
     label: "Series",
-    fields: ["name", "publisher", "startYear", "endYear", "era", "chronology", "type", "notes"]
+    fields: ["name", "publisher", "startYear", "endYear", "era", "type", "notes"]
   },
   characters: {
     label: "Characters / Teams",
