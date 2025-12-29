@@ -15,6 +15,9 @@ const navItems = [
   { label: "Tools", path: "/tools" },
 ];
 
+const FOCUSABLE_ELEMENTS_SELECTOR = 
+  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
 const Branding: React.FC = () => (
   <div>
     <p className="text-xs uppercase tracking-[0.3em] text-moss-600">
@@ -34,13 +37,12 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Prevent body scroll when menu is open
   useEffect(() => {
     if (isMenuOpen) {
+      const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isMenuOpen]);
 
   // Handle Escape key to close menu and focus trap
@@ -57,7 +59,7 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       // Handle Tab key for focus trap
       if (event.key === 'Tab' && menuRef.current) {
         const focusableElements = menuRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          FOCUSABLE_ELEMENTS_SELECTOR
         );
         const firstElement = focusableElements[0];
         const lastElement = focusableElements[focusableElements.length - 1];
@@ -86,7 +88,7 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   useEffect(() => {
     if (isMenuOpen && menuRef.current) {
       const focusableElements = menuRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        FOCUSABLE_ELEMENTS_SELECTOR
       );
       const firstElement = focusableElements[0];
 
