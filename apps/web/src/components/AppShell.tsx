@@ -15,7 +15,7 @@ const navItems = [
   { label: "Tools", path: "/tools" },
 ];
 
-const FOCUSABLE_ELEMENTS_SELECTOR = 
+const FOCUSABLE_ELEMENTS_SELECTOR =
   'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 const Branding: React.FC = () => (
@@ -102,6 +102,32 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className="app-shell">
+      {/* Floating hamburger menu button */}
+      {!isMenuOpen && (
+        <div className="fixed top-6 left-6 z-30 lg:hidden">
+          <button
+            className="rounded-full bg-mist-50/70 p-3 shadow-md backdrop-blur-sm transition hover:bg-mist-100"
+            onClick={() => setIsMenuOpen(true)}
+            aria-label="Open navigation menu"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
+
       <div className="relative z-10 flex min-h-screen">
         {/* Desktop sidebar */}
         <aside className="hidden w-64 flex-col gap-10 border-r border-mist-200 bg-mist-50/70 px-6 py-8 lg:flex">
@@ -202,31 +228,10 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <main className="flex-1 px-6 py-8 lg:px-12">
           <div className="mx-auto max-w-6xl">
             {/* Mobile header */}
-            <div className="mb-6 flex items-center justify-between lg:hidden">
-              <button
-                className="p-2"
-                onClick={() => setIsMenuOpen(true)}
-                aria-label="Open navigation menu"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              </button>
-              <div className="text-center">
-                <h1 className="text-xl font-semibold text-ink-900">Story-Block Focus</h1>
-              </div>
-              <div className="w-8" />
+            <div className="mb-6 flex items-center justify-center text-center lg:hidden">
+              <h1 className="text-xl font-semibold text-ink-900">
+                Story-Block Focus
+              </h1>
             </div>
             <div className="surface-panel rounded-[32px] px-6 py-8 shadow-soft lg:px-10">
               {children}
