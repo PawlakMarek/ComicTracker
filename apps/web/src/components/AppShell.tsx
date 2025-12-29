@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import clsx from "clsx";
@@ -12,19 +12,25 @@ const navItems = [
   { label: "Issues", path: "/issues" },
   { label: "Reading Sessions", path: "/sessions" },
   { label: "Import / Export", path: "/import" },
-  { label: "Tools", path: "/tools" }
+  { label: "Tools", path: "/tools" },
 ];
 
 const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <div className="app-shell">
       <div className="relative z-10 flex min-h-screen">
+        {/* Desktop sidebar */}
         <aside className="hidden w-64 flex-col gap-10 border-r border-mist-200 bg-mist-50/70 px-6 py-8 lg:flex">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-moss-600">ComicTracker</p>
-            <h1 className="mt-2 text-2xl font-semibold text-ink-900">Story-Block Focus</h1>
+            <p className="text-xs uppercase tracking-[0.3em] text-moss-600">
+              ComicTracker
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold text-ink-900">
+              Story-Block Focus
+            </h1>
           </div>
           <nav className="flex flex-col gap-2">
             {navItems.map((item) => (
@@ -56,18 +62,101 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </div>
         </aside>
 
-        <main className="flex-1 px-6 py-8 lg:px-12">
-          <div className="mx-auto max-w-6xl">
-            <div className="mb-6 flex items-center justify-between lg:hidden">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-moss-600">ComicTracker</p>
-                <h1 className="text-2xl font-semibold text-ink-900">Story-Block Focus</h1>
-              </div>
-              <button onClick={logout} className="btn-secondary">
+        {/* Mobile menu */}
+        {isMenuOpen && (
+          <div className="fixed inset-0 z-20 flex flex-col bg-mist-50/95 p-6 lg:hidden">
+            <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-moss-600">
+                ComicTracker
+              </p>
+              <h1 className="mt-2 text-2xl font-semibold text-ink-900">
+                Story-Block Focus
+              </h1>
+            </div>
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                className="p-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <nav className="mt-10 flex flex-col gap-2">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={({ isActive }) =>
+                    clsx(
+                      "rounded-2xl px-4 py-2 text-sm font-semibold transition",
+                      isActive
+                        ? "bg-ink-900 text-mist-50 shadow-card"
+                        : "text-ink-700 hover:bg-mist-100 hover:text-ink-900"
+                    )
+                  }
+                  end={item.path === "/"}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+            <div className="mt-auto space-y-3 text-xs text-ink-700">
+              <p className="font-semibold">Signed in as</p>
+              <p className="rounded-xl border border-mist-200 bg-mist-100/70 px-3 py-2 text-[11px]">
+                {user?.email}
+              </p>
+              <button onClick={logout} className="btn-secondary w-full">
                 Sign out
               </button>
             </div>
-            <div className="surface-panel rounded-[32px] px-6 py-8 shadow-soft lg:px-10">{children}</div>
+          </div>
+        )}
+
+        <main className="flex-1 px-6 py-8 lg:px-12">
+          <div className="mx-auto max-w-6xl">
+            {/* Mobile header */}
+            <div className="mb-6 flex items-center justify-between lg:hidden">
+              <button
+                className="p-2"
+                onClick={() => setIsMenuOpen(true)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </button>
+              <div className="text-center">
+                <h1 className="text-xl font-semibold text-ink-900">Story-Block Focus</h1>
+              </div>
+              <div className="w-8" />
+            </div>
+            <div className="surface-panel rounded-[32px] px-6 py-8 shadow-soft lg:px-10">
+              {children}
+            </div>
           </div>
         </main>
       </div>
