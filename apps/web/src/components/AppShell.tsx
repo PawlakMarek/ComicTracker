@@ -43,32 +43,24 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     };
   }, [isMenuOpen]);
 
-  // Handle Escape key to close menu
+  // Handle Escape key to close menu and focus trap
   useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isMenuOpen) {
+    if (!isMenuOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Handle Escape key
+      if (event.key === 'Escape') {
         setIsMenuOpen(false);
+        return;
       }
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isMenuOpen]);
 
-  // Focus trap within mobile menu
-  useEffect(() => {
-    if (isMenuOpen && menuRef.current) {
-      const focusableElements = menuRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
-
-      firstElement?.focus();
-
-      const handleTabKey = (event: KeyboardEvent) => {
-        if (event.key !== 'Tab') return;
+      // Handle Tab key for focus trap
+      if (event.key === 'Tab' && menuRef.current) {
+        const focusableElements = menuRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
 
         if (event.shiftKey) {
           if (document.activeElement === firstElement) {
@@ -81,12 +73,24 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             event.preventDefault();
           }
         }
-      };
+      }
+    };
 
-      document.addEventListener('keydown', handleTabKey);
-      return () => {
-        document.removeEventListener('keydown', handleTabKey);
-      };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
+  // Focus trap within mobile menu
+  useEffect(() => {
+    if (isMenuOpen && menuRef.current) {
+      const focusableElements = menuRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements[0];
+
+      firstElement?.focus();
     }
   }, [isMenuOpen]);
 
@@ -130,7 +134,7 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         {isMenuOpen && (
           <div ref={menuRef} className="fixed inset-0 z-20 flex flex-col bg-mist-50/95 p-6 lg:hidden">
             <div className="flex items-center justify-between">
-            <Branding />
+              <Branding />
               <button
                 onClick={() => setIsMenuOpen(false)}
                 className="p-2"
