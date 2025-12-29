@@ -1,6 +1,7 @@
 import React from "react";
 import Papa from "papaparse";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 import SectionHeader from "../components/SectionHeader";
 import FormField from "../components/FormField";
 import SearchableMultiSelect from "../components/SearchableMultiSelect";
@@ -80,10 +81,34 @@ const CharactersPage = () => {
     });
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
-    await apiFetch(`/api/characters/${id}`, { method: "DELETE" });
-    load();
+  const handleDelete = (id: string, name: string) => {
+    toast(
+      (t) => (
+        <div className="flex items-center gap-3">
+          <span>
+            Delete <strong>{name}</strong>?
+          </span>
+          <button
+            className="btn-danger"
+            onClick={() => {
+              toast.dismiss(t.id);
+              apiFetch(`/api/characters/${id}`, { method: "DELETE" }).then(() => {
+                toast.success("Character deleted.");
+                load();
+              });
+            }}
+          >
+            Delete
+          </button>
+          <button className="btn-secondary" onClick={() => toast.dismiss(t.id)}>
+            Cancel
+          </button>
+        </div>
+      ),
+      {
+        duration: 5000
+      }
+    );
   };
 
   const handleCreate = async () => {
@@ -115,6 +140,7 @@ const CharactersPage = () => {
       });
       setTeamIds([]);
       load();
+      toast.success("Character or team created.");
     } catch (err) {
       setError((err as Error).message);
     }
@@ -324,7 +350,9 @@ const CharactersPage = () => {
           className="mt-4 min-h-[180px] w-full rounded-2xl border border-mist-200 bg-white px-3 py-2 text-sm text-ink-900"
           value={bulkText}
           onChange={(event) => setBulkText(event.target.value)}
-          placeholder="name,realName,type,publisherName,aliases,continuity,majorStatusQuoNotes,currentTrackingPriority\nThor,Thor Odinson,CHARACTER,Marvel,,Earth-616,,HIGH\nAvengers,,TEAM,Marvel,,Earth-616,,MEDIUM"
+          placeholder="name,realName,type,publisherName,aliases,continuity,majorStatusQuoNotes,currentTrackingPriority
+Thor,Thor Odinson,CHARACTER,Marvel,,Earth-616,,HIGH
+Avengers,,TEAM,Marvel,,Earth-616,,MEDIUM"
         />
         {bulkStatus ? <p className="mt-3 text-sm text-ember-600">{bulkStatus}</p> : null}
         <button className="btn-primary mt-4" onClick={handleBulkImport}>

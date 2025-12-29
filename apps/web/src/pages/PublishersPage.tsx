@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 import SectionHeader from "../components/SectionHeader";
 import FormField from "../components/FormField";
 import { apiFetch } from "../lib/api";
@@ -36,16 +37,39 @@ const PublishersPage = () => {
       setCountry("");
       setNotes("");
       load();
+      toast.success("Publisher created.");
     } catch (err) {
       setError((err as Error).message);
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
+  const handleDelete = (id: string, name: string) => {
     const message = `Delete "${name}"? This will remove related series and events.`;
-    if (!window.confirm(message)) return;
-    await apiFetch(`/api/publishers/${id}`, { method: "DELETE" });
-    load();
+    toast(
+      (t) => (
+        <div className="flex items-center gap-3">
+          <span>{message}</span>
+          <button
+            className="btn-danger"
+            onClick={() => {
+              toast.dismiss(t.id);
+              apiFetch(`/api/publishers/${id}`, { method: "DELETE" }).then(() => {
+                toast.success("Publisher deleted.");
+                load();
+              });
+            }}
+          >
+            Delete
+          </button>
+          <button className="btn-secondary" onClick={() => toast.dismiss(t.id)}>
+            Cancel
+          </button>
+        </div>
+      ),
+      {
+        duration: 5000
+      }
+    );
   };
 
   return (

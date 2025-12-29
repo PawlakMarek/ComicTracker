@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import clsx from "clsx";
+import { Toaster } from "react-hot-toast";
 
 const navItems = [
   { label: "Dashboard", path: "/" },
@@ -102,6 +103,7 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className="app-shell">
+      <Toaster />
       {/* Floating hamburger menu button */}
       {!isMenuOpen && (
         <div className="fixed top-6 left-6 z-30 lg:hidden">
