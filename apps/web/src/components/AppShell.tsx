@@ -106,7 +106,7 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       {!isMenuOpen && (
         <div className="fixed top-6 left-6 z-30 lg:hidden">
           <button
-            className="rounded-full bg-mist-50/70 p-3 shadow-md backdrop-blur-sm transition hover:bg-mist-100"
+            className="rounded-full bg-mist-50/70 p-3 shadow-md backdrop-blur-sm transition hover:bg-mist-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ink-900"
             onClick={() => setIsMenuOpen(true)}
             aria-label="Open navigation menu"
           >
