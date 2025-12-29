@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import clsx from "clsx";
@@ -15,23 +15,97 @@ const navItems = [
   { label: "Tools", path: "/tools" },
 ];
 
+const FOCUSABLE_ELEMENTS_SELECTOR = 
+  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+const Branding: React.FC = () => (
+  <div>
+    <p className="text-xs uppercase tracking-[0.3em] text-moss-600">
+      ComicTracker
+    </p>
+    <h1 className="mt-2 text-2xl font-semibold text-ink-900">
+      Story-Block Focus
+    </h1>
+  </div>
+);
+
 const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isMenuOpen]);
+
+  // Handle Escape key to close menu and focus trap
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Handle Escape key
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+        return;
+      }
+
+      // Handle Tab key for focus trap
+      if (event.key === 'Tab' && menuRef.current) {
+        const focusableElements = menuRef.current.querySelectorAll<HTMLElement>(
+          FOCUSABLE_ELEMENTS_SELECTOR
+        );
+        
+        // Only set up focus trap if there are focusable elements
+        if (focusableElements.length === 0) return;
+        
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (event.shiftKey) {
+          if (document.activeElement === firstElement) {
+            lastElement?.focus();
+            event.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            firstElement?.focus();
+            event.preventDefault();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
+  // Auto-focus first element when menu opens
+  useEffect(() => {
+    if (isMenuOpen && menuRef.current) {
+      const focusableElements = menuRef.current.querySelectorAll<HTMLElement>(
+        FOCUSABLE_ELEMENTS_SELECTOR
+      );
+      const firstElement = focusableElements[0];
+
+      firstElement?.focus();
+    }
+  }, [isMenuOpen]);
 
   return (
     <div className="app-shell">
       <div className="relative z-10 flex min-h-screen">
         {/* Desktop sidebar */}
         <aside className="hidden w-64 flex-col gap-10 border-r border-mist-200 bg-mist-50/70 px-6 py-8 lg:flex">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-moss-600">
-              ComicTracker
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold text-ink-900">
-              Story-Block Focus
-            </h1>
-          </div>
+          <Branding />
           <nav className="flex flex-col gap-2">
             {navItems.map((item) => (
               <NavLink
@@ -64,19 +138,18 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
         {/* Mobile menu */}
         {isMenuOpen && (
-          <div className="fixed inset-0 z-20 flex flex-col bg-mist-50/95 p-6 lg:hidden">
+          <div
+            ref={menuRef}
+            className="fixed inset-0 z-20 flex flex-col bg-mist-50/95 p-6 lg:hidden"
+            role="dialog"
+            aria-modal="true"
+          >
             <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-moss-600">
-                ComicTracker
-              </p>
-              <h1 className="mt-2 text-2xl font-semibold text-ink-900">
-                Story-Block Focus
-              </h1>
-            </div>
+              <Branding />
               <button
                 onClick={() => setIsMenuOpen(false)}
                 className="p-2"
+                aria-label="Close menu"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -133,6 +206,7 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <button
                 className="p-2"
                 onClick={() => setIsMenuOpen(true)}
+                aria-label="Open navigation menu"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
