@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import SectionHeader from "../components/SectionHeader";
 import FormField from "../components/FormField";
 import SearchableMultiSelect from "../components/SearchableMultiSelect";
@@ -120,9 +121,31 @@ const SeriesDetailPage = () => {
       message += `\nWarning: ${deps.multiSeriesStoryBlocks.length} story blocks include multiple series.`;
     }
     message += "\nThis cannot be undone.";
-    if (!window.confirm(message)) return;
-    await apiFetch(`/api/series/${id}`, { method: "DELETE" });
-    navigate("/library/series");
+    toast(
+      (t) => (
+        <div className="flex items-center gap-3">
+          <span>{message}</span>
+          <button
+            className="btn-danger"
+            onClick={() => {
+              toast.dismiss(t.id);
+              apiFetch(`/api/series/${id}`, { method: "DELETE" }).then(() => {
+                toast.success("Series deleted.");
+                navigate("/library/series");
+              });
+            }}
+          >
+            Delete
+          </button>
+          <button className="btn-secondary" onClick={() => toast.dismiss(t.id)}>
+            Cancel
+          </button>
+        </div>
+      ),
+      {
+        duration: 5000
+      }
+    );
   };
 
   if (!series) {

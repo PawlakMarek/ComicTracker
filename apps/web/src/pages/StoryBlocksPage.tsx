@@ -1,6 +1,7 @@
 import React from "react";
 import Papa from "papaparse";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 import SectionHeader from "../components/SectionHeader";
 import FormField from "../components/FormField";
 import SearchableMultiSelect from "../components/SearchableMultiSelect";
@@ -157,10 +158,34 @@ const StoryBlocksPage = () => {
     });
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
-    await apiFetch(`/api/story-blocks/${id}`, { method: "DELETE" });
-    load();
+  const handleDelete = (id: string, name: string) => {
+    toast(
+      (t) => (
+        <div className="flex items-center gap-3">
+          <span>
+            Delete <strong>{name}</strong>?
+          </span>
+          <button
+            className="btn-danger"
+            onClick={() => {
+              toast.dismiss(t.id);
+              apiFetch(`/api/story-blocks/${id}`, { method: "DELETE" }).then(() => {
+                toast.success("Story block deleted.");
+                load();
+              });
+            }}
+          >
+            Delete
+          </button>
+          <button className="btn-secondary" onClick={() => toast.dismiss(t.id)}>
+            Cancel
+          </button>
+        </div>
+      ),
+      {
+        duration: 5000
+      }
+    );
   };
 
   const handleAddRange = async () => {
@@ -239,6 +264,7 @@ const StoryBlocksPage = () => {
       setSeriesIds([]);
       setIssueIds([]);
       load();
+      toast.success("Story block created.");
     } catch (err) {
       setError((err as Error).message);
     }

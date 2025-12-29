@@ -1,6 +1,7 @@
 import React from "react";
 import Papa from "papaparse";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 import SectionHeader from "../components/SectionHeader";
 import FormField from "../components/FormField";
 import SearchableMultiSelect from "../components/SearchableMultiSelect";
@@ -76,10 +77,34 @@ const IssuesPage = () => {
     });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this issue? This cannot be undone.")) return;
-    await apiFetch(`/api/issues/${id}`, { method: "DELETE" });
-    load();
+  const handleDelete = (id: string, issueNumber: string) => {
+    toast(
+      (t) => (
+        <div className="flex items-center gap-3">
+          <span>
+            Delete issue <strong>#{issueNumber}</strong>?
+          </span>
+          <button
+            className="btn-danger"
+            onClick={() => {
+              toast.dismiss(t.id);
+              apiFetch(`/api/issues/${id}`, { method: "DELETE" }).then(() => {
+                toast.success("Issue deleted.");
+                load();
+              });
+            }}
+          >
+            Delete
+          </button>
+          <button className="btn-secondary" onClick={() => toast.dismiss(t.id)}>
+            Cancel
+          </button>
+        </div>
+      ),
+      {
+        duration: 5000
+      }
+    );
   };
 
   const handleCreate = async () => {
@@ -117,6 +142,7 @@ const IssuesPage = () => {
       setTeamIds([]);
       setEventIds([]);
       load();
+      toast.success("Issue created.");
     } catch (err) {
       setError((err as Error).message);
     }
@@ -301,7 +327,7 @@ const IssuesPage = () => {
                   <td className="py-3">{item.status}</td>
                   <td className="py-3">{item.releaseDate ? item.releaseDate.slice(0, 10) : "—"}</td>
                   <td className="py-3">
-                    <button className="btn-secondary" onClick={() => handleDelete(item.id)}>
+                    <button className="btn-secondary" onClick={() => handleDelete(item.id, item.issueNumber)}>
                       Delete
                     </button>
                   </td>

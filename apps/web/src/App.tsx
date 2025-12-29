@@ -1,5 +1,6 @@
 import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import AppShell from "./components/AppShell";
 import { AuthProvider, useAuth } from "./lib/auth";
 import DashboardPage from "./pages/DashboardPage";
@@ -215,6 +216,7 @@ const AppRoutes = () => (
 
 const App = () => (
   <AuthProvider>
+    <Toaster />
     <AppRoutes />
   </AuthProvider>
 );

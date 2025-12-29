@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 import SectionHeader from "../components/SectionHeader";
 import FormField from "../components/FormField";
 import { apiFetch } from "../lib/api";
@@ -47,15 +48,40 @@ const ReadingOrdersPage = () => {
       });
       setForm({ name: "", description: "" });
       load();
+      toast.success("Reading order created.");
     } catch (err) {
       setError((err as Error).message);
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
-    await apiFetch(`/api/reading-orders/${id}`, { method: "DELETE" });
-    load();
+  const handleDelete = (id: string, name: string) => {
+    toast(
+      (t) => (
+        <div className="flex items-center gap-3">
+          <span>
+            Delete <strong>{name}</strong>?
+          </span>
+          <button
+            className="btn-danger"
+            onClick={() => {
+              toast.dismiss(t.id);
+              apiFetch(`/api/reading-orders/${id}`, { method: "DELETE" }).then(() => {
+                toast.success("Reading order deleted.");
+                load();
+              });
+            }}
+          >
+            Delete
+          </button>
+          <button className="btn-secondary" onClick={() => toast.dismiss(t.id)}>
+            Cancel
+          </button>
+        </div>
+      ),
+      {
+        duration: 5000
+      }
+    );
   };
 
   return (
