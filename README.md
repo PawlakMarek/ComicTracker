@@ -2,6 +2,32 @@
 
 Production-ready comic reading tracker centered on story blocks (arcs/runs/events). Designed for massive libraries, character/team focus, session-based tracking, and fatigue-aware suggestions.
 
+## What It Covers
+- Story block-first reading (arcs/runs/events) with derived progress.
+- Character/team focus with aliases, priorities, and team membership.
+- Reading sessions with fatigue signals and switch recommendations.
+- Multiple reading orders for different timelines or focus runs.
+- CSV/JSON import, ComicVine enrichment, and bulk add tools.
+
+## Core Concepts
+- Publishers → Series → Issues form the publication backbone.
+- Story Blocks group issues across one or more series and drive reading progress.
+- Characters/Teams appear in issues and roll up into story blocks.
+- Reading Sessions log actual reading and mark issues as finished.
+- Reading Orders arrange story blocks into a custom sequence.
+- Series can span multiple publication eras; Story Blocks use a single era plus optional chronology.
+
+## Derived Data & Autosave
+- Story Block start/end year, status, and characters/teams are derived from its issues and re-synced on issue/session changes.
+- Reading Order status is derived from the status of its story blocks.
+- Issue lists use numeric sorting for correct order (#1, #2, #10).
+- Editing existing records auto-saves; creating new records still requires a manual save.
+
+## Documentation
+- Guide & concepts: `docs/guide.md`
+- API reference: `docs/api.md`
+- Import formats: `docs/import-format.md`
+
 ## Stack
 - Backend: Fastify (TypeScript), Prisma ORM, PostgreSQL
 - Frontend: React (Vite) + Tailwind CSS
@@ -47,8 +73,8 @@ The API runs on `http://localhost:3001` inside the compose network. Nginx proxie
 - `COOKIE_SAMESITE`: `lax` (default), `strict`, or `none`
 - `COOKIE_DOMAIN`: Optional cookie domain for subdomain deployments (e.g. `.example.com`)
 - `COOKIE_SECURE`: Optional override for cookie `secure` flag (`true`/`false`)
-- `VITE_API_URL`: Optional API base for the frontend (leave empty to use `/api`)
-- `API_UPSTREAM`: Nginx upstream for `/api` proxy in the web container (default `http://127.0.0.1:3001`)
+- `VITE_API_URL`: Optional API base for the frontend (build-time; leave empty to use `/api`)
+- `API_UPSTREAM`: Nginx upstream for `/api` proxy in the web container (must be set in production)
 
 ## Migrations
 - Local dev: `npm run prisma:migrate`
@@ -91,7 +117,7 @@ Railway works best with two services from the same GitHub repo:
    - Root directory: `apps/web`
    - Dockerfile path: `apps/web/Dockerfile`
    - Build arg:
-     - `VITE_API_URL=https://<your-api-domain>` (so the SPA calls the API directly)
+     - `VITE_API_URL=https://<your-api-domain>` (optional; leave empty to use `/api` via nginx proxy)
    - Env var:
      - `API_UPSTREAM=https://<your-api-domain>` (required so nginx starts successfully)
 
