@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import clsx from "clsx";
@@ -15,23 +15,87 @@ const navItems = [
   { label: "Tools", path: "/tools" },
 ];
 
+const Branding: React.FC = () => (
+  <div>
+    <p className="text-xs uppercase tracking-[0.3em] text-moss-600">
+      ComicTracker
+    </p>
+    <h1 className="mt-2 text-2xl font-semibold text-ink-900">
+      Story-Block Focus
+    </h1>
+  </div>
+);
+
 const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMenuOpen]);
+
+  // Handle Escape key to close menu
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isMenuOpen]);
+
+  // Focus trap within mobile menu
+  useEffect(() => {
+    if (isMenuOpen && menuRef.current) {
+      const focusableElements = menuRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      firstElement?.focus();
+
+      const handleTabKey = (event: KeyboardEvent) => {
+        if (event.key !== 'Tab') return;
+
+        if (event.shiftKey) {
+          if (document.activeElement === firstElement) {
+            lastElement?.focus();
+            event.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            firstElement?.focus();
+            event.preventDefault();
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleTabKey);
+      return () => {
+        document.removeEventListener('keydown', handleTabKey);
+      };
+    }
+  }, [isMenuOpen]);
 
   return (
     <div className="app-shell">
       <div className="relative z-10 flex min-h-screen">
         {/* Desktop sidebar */}
         <aside className="hidden w-64 flex-col gap-10 border-r border-mist-200 bg-mist-50/70 px-6 py-8 lg:flex">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-moss-600">
-              ComicTracker
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold text-ink-900">
-              Story-Block Focus
-            </h1>
-          </div>
+          <Branding />
           <nav className="flex flex-col gap-2">
             {navItems.map((item) => (
               <NavLink
@@ -64,19 +128,13 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
         {/* Mobile menu */}
         {isMenuOpen && (
-          <div className="fixed inset-0 z-20 flex flex-col bg-mist-50/95 p-6 lg:hidden">
+          <div ref={menuRef} className="fixed inset-0 z-20 flex flex-col bg-mist-50/95 p-6 lg:hidden">
             <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-moss-600">
-                ComicTracker
-              </p>
-              <h1 className="mt-2 text-2xl font-semibold text-ink-900">
-                Story-Block Focus
-              </h1>
-            </div>
+            <Branding />
               <button
                 onClick={() => setIsMenuOpen(false)}
                 className="p-2"
+                aria-label="Close menu"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -133,6 +191,8 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <button
                 className="p-2"
                 onClick={() => setIsMenuOpen(true)}
+                aria-label="Open navigation menu"
+                aria-expanded={isMenuOpen}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
