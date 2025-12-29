@@ -61,6 +61,10 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         const focusableElements = menuRef.current.querySelectorAll<HTMLElement>(
           FOCUSABLE_ELEMENTS_SELECTOR
         );
+        
+        // Only set up focus trap if there are focusable elements
+        if (focusableElements.length === 0) return;
+        
         const firstElement = focusableElements[0];
         const lastElement = focusableElements[focusableElements.length - 1];
 
@@ -84,7 +88,7 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     };
   }, [isMenuOpen]);
 
-  // Focus trap within mobile menu
+  // Auto-focus first element when menu opens
   useEffect(() => {
     if (isMenuOpen && menuRef.current) {
       const focusableElements = menuRef.current.querySelectorAll<HTMLElement>(
@@ -134,7 +138,12 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
         {/* Mobile menu */}
         {isMenuOpen && (
-          <div ref={menuRef} className="fixed inset-0 z-20 flex flex-col bg-mist-50/95 p-6 lg:hidden">
+          <div
+            ref={menuRef}
+            className="fixed inset-0 z-20 flex flex-col bg-mist-50/95 p-6 lg:hidden"
+            role="dialog"
+            aria-modal="true"
+          >
             <div className="flex items-center justify-between">
               <Branding />
               <button
@@ -198,7 +207,6 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 className="p-2"
                 onClick={() => setIsMenuOpen(true)}
                 aria-label="Open navigation menu"
-                aria-expanded={isMenuOpen}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
